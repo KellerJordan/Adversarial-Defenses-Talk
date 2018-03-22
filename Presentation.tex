@@ -146,37 +146,54 @@ UCSC
 	\section*{Optimizer Robustness}
 	
 	\begin{frame}{Optimizer Robustness}
-		\begin{block}{We studied:}
-			\begin{itemize}
-				\item Vanilla gradient descent
-				\item EG plus/minus
-			\end{itemize}
+		\begin{block}{Optimizers Studied}
+			\begin{center}
+				\begin{tabular}{ l | l | l }
+					Method & SGD & EG \\ \hline
+					Rule & \includegraphics[width=4cm]{sgd_rule} & \includegraphics[width=4cm]{eg_rule}
+				\end{tabular}
+			\end{center}
 		\end{block}
+		\begin{itemize}
+			\item Used extension of EG to +/- weights case for training
+		\end{itemize}
 	\end{frame}
 	
 	\begin{frame}{Procedure}
 		\begin{itemize}
-			\item Train same model with GD and EG$\pm$ on MNIST
-			\item Model is fully-connected 784-100-10
-			\item Run non-targeted adversarial attack until fooled on subset
-			\item Attacks were gradient ascent (GA) and fast gradient sign method (FGS)
-			\item Average added noise for each class
-			\item Compare results between models
+			\item Train FC 784-100-10 using GD and EG$\pm$ on MNIST
+			\item Run untargeted adversarial attack methods
+			\begin{itemize}
+				\item Gradient Ascent (GA)
+				\item Fast Gradient Sign (FGS)
+			\end{itemize}
+			\item Compare resulting models and adversarial examples
+			\begin{itemize}
+				\item Number of iters to fool
+				\item Transferability of strong attacks
+				\item Average perturbation
+			\end{itemize}
 		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}{Examples}
+		\centering
+		\includegraphics[width=\textwidth]{mnist_attacks}
 	\end{frame}
 	
 	\begin{frame}{Attack Difficulty}
 		\begin{block}{Number of iterations to fool network}
 			\begin{center}
-				\begin{tabular}{| l | l | l |}
-					\hline
+				\begin{tabular}{ l | l | l }
 					Method / Optimizer & SGD & EG \\ \hline
 					Gradient Ascent & $60.9 (\pm 32.3)$ & $85.1 (\pm 40.5)$ \\ \hline
-					Fast Gradient Sign & $52.0 (\pm 26.1)$ & $91.0 (\pm 43.5)$ \\ \hline
+					Fast Gradient Sign & $52.0 (\pm 26.1)$ & $91.0 (\pm 43.5)$
 				\end{tabular}
 			\end{center}
 		\end{block}
-		A network is ``fooled" when its prediction changes (untargeted attack)
+		\begin{itemize}
+			\item A network is defined as ``fooled" when its prediction changes
+		\end{itemize}
 	\end{frame}
 	
 	\begin{frame}{Average Perturbation}
@@ -187,56 +204,71 @@ UCSC
 	\end{frame}
 	
 	\begin{frame}{Transferability Results}
-		\begin{block}{Transferability of attacks between optimizers}
+		\begin{block}{Probability of success on other optimizer}
 			\begin{center}
-				\begin{tabular}{| l | l | l |}
-					\hline
+				\begin{tabular}{ l | l | l }
 					Method / Src$\rightarrow$Dst & SGD$\rightarrow$EG & EG$\rightarrow$SGD  \\ \hline
 					Gradient Ascent & 67.4\% & 99.0\% \\ \hline
-					Fast Gradient Sign & 88.2\% & 99.8\% \\ \hline
+					Fast Gradient Sign & 88.2\% & 99.8\%
 				\end{tabular}
 			\end{center}
 		\end{block}
-		Iterations held constant at 200
+		\begin{itemize}
+			\item Iterations held constant at 200 (should be comparably strong)
+		\end{itemize}
 	\end{frame}
 	
-	\begin{frame}{Notes}
+	\begin{frame}{Results}
 		\begin{itemize}
-			\item FGS looks better to humans, worse for MSE
-			\item GA better at revealing structure of model since cares about strength of change
-			\item Next step: should try L1 norm weights to see difference
+			\item Requires 1.5$\times$ stronger attacks to fool EG-trained model
+			\item EG shows some robustness to attacks transferred from SGD
+			\item SGD is not robust to attacks transferred to EG
+			\item Attacks against EG make more sense w.r.t. expected structure of digit space
 		\end{itemize}
 	\end{frame}
 
 	\section*{Reconstruction as a Defense}
 	
-	\begin{frame}{Reconstruction as a Defense}
-		\begin{block}{How to get recon err?}
-			Need some way to reconstruct image
-			
-			Could use encoder/decoder
-			
-			I went with capsule network
+	\begin{frame}{Defending using Reconstruction Error}
+		\begin{block}{Basic idea}
+			\begin{itemize}
+				\item Use an architecture that reconstructs input images (CapsNet)
+				\item Model will reconstruct some element of decoder-space for fooled class
+				\item Adversarial images are unlikely to be in this space
+				\item Expect high reconstruction error (MSE)
+			\end{itemize}
 		\end{block}
 	\end{frame}
 	
 	\begin{frame}{Capsule Network Refresher}
-		details about reconstruction network and capsnet
+		\centering
+		\includegraphics[width=\textwidth]{caps_recon}
+	\end{frame}
+	
+	\begin{frame}{Reconstructions}
+		\centering
+		\includegraphics[width=\textwidth]{recon-fig5}
+	\end{frame}
+	
+	\begin{frame}{Reconstructions}
+		\centering
+		\includegraphics[width=\textwidth]{recon-fig4}		
+		
+		\includegraphics[width=\textwidth]{recon-fig3}
 	\end{frame}
 	
 	\begin{frame}{Results}
 		\centering
-		\includegraphics[width=\textwidth]{recon-fig1}
-	\end{frame}
-	
-	\begin{frame}{CIFAR10}
-		Capsules are not there yet.
-		\includegraphics[width=\textwidth]{cifar_recon}
-	\end{frame}
-	
-	\begin{frame}{ROC Curve}
-		\centering
 		\includegraphics[width=10cm]{mse_roc}
+	\end{frame}
+	
+	\begin{frame}{Results}
+		\begin{itemize}
+			\item Method successfully detects $\sim$70\% of of attacks with 5\% false-positive rate
+			\item Could be improved by better loss function
+			\item Unknown vulnerability to white-box attacks
+			\item Expect good black-box performance due to variability of decoders and loss functions
+		\end{itemize}
 	\end{frame}
 	
 	
