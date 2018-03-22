@@ -79,7 +79,7 @@
 % - Give the names in the same order as the appear in the paper.
 % - Use the \inst{?} command only if the authors have different
 %   affiliation.
-\author{Keller Jordan$^1$, Rene Gutierrez$^2$, Brett Gohre$^3$}
+\author{Keller Jordan$^1$, Rene Gutierrez$^2$, Brett G\"ohre$^3$}
 
 %%% Author Affiliation %%% - Optional
 % - Use the \inst command only if there are several affiliations.
@@ -140,7 +140,8 @@ UCSC
 	
 	%%% Body %%%
 	\graphicspath{{figures/}}
-	
+
+
 		\section*{Introduction}
 	
 	\begin{frame}{Motivation}
@@ -294,6 +295,12 @@ UCSC
 			\subfloat[588]{\includegraphics[width=0.25\linewidth]{co32.png}}
 			\subfloat[Reg]{\includegraphics[width=0.25\linewidth]{reg2.png}}  
 		\end{figure}
+	\end{frame}
+	
+	\begin{frame}{Multi-task training as Defense}
+		\begin{block}{Key Idea}
+			We explore the robustness outcome of joint training on FashionMNIST while training an MNIST classifier. This multi-task network will be attacked by a white box attacks effective on neural net trained only on MNIST. MNIST and FashionMNIST have very different features, so we expect the results to be different from merely obtaining white box attacks on subsets of MNIST and applying them to full MNIST. (Results to be featured in write-up).
+		\end{block}
 	\end{frame}
 	
 	\section*{Optimizer Robustness}
