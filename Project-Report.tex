@@ -43,11 +43,11 @@
 
 
 \begin{abstract}
-	
-Adversarial attacks have been a growing concern as the success of Neural Networks increases. Of particular interest, are attacks that can devised without knowing the particular model used, but only the data distribution, the so called Black Box attacks. In this project we test several ideas to fend off Black Box attacks: Random Compression Matrices, the exponentiated gradient optimizer, and Capsule Networks with reconstruction error based detection.
+
+Adversarial attacks have been a growing concern as the success of Neural Networks has increased. To address this issue, in this project we explore a variety of techniques to defend against such attacks. To defend against black-box attacks, we use attempt to use Random Compression Matrices. For white-box attacks, we compare the robustness of the exponentiated gradient optimization scheme to classic stochastic gradient descent. And for an encoder-decoder architecture where the encoder is attacked in a white-box scenario without access to the decoder, we investigate reconstruction-error based detection.
 	
 \begin{keywords}
-Adversarial Examples, Black-Box Attacks, Random Projection Matrix, Reconstruction Error, Capsule Networks, Convolutional Neural Networks.
+Adversarial Examples, White-Box Attacks, Black-Box Attacks, Random Projection Matrix, Reconstruction Error, Capsule Networks, Convolutional Neural Networks.
 \end{keywords}
 \end{abstract}
 
@@ -141,11 +141,14 @@ To analyze the weights obtained after compression and expansion, and compared th
 
 \subsection*{Idea}
 
-Using squared loss as a divergence we arrive at the familiar gradient descent update rule:
+In this section, we explore the robustness of idential models trained using two optimizers: stochastic gradient descent and exponentiated gradient. Because the weights learned by each optimization scheme may be different, models trained using the two schemes may be more or less difficult to fool using adversarial noise. Additionally, attacks generated for one optimizer may not transfer to another.
+
+The two optimizers may be compared in terms of what divergence we must choose to get their update rule.
+Using squared difference as a divergence we arrive at the familiar gradient descent update rule:
 $$ w_{t+1} \, \dot{=} \, w_t - \eta \nabla L(w_t). $$
 The choice of relative entropy as a divergence (Kivinen, J \& Warmuth, M 1997) results in the following update rule, known as Exponentiated Gradient (EG):
 $$ w_{t+1} \, \dot{=} \, w_t e^{-\eta \nabla L(w_t)}. $$
-When extended to the case where weights can be negative, the above optimization scheme is known as EG plus/minus.
+When extended to the case where weights can be negative, the above optimization scheme is known as EG plus/minus. We use this extension for training of neural networks in this section.
 
 In this section, we investigate the robustness of models trained using each optimizer to adversarial attacks, and measure the transferability of attacks between said models.
 
