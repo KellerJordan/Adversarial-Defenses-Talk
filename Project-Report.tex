@@ -5,6 +5,7 @@
 %\usepackage[ruled,linesnumbered]{algorithm2e}
 \usepackage[caption = false]{subfig}
 \usepackage{float}
+\usepackage{hyperref}
 
 %\usepackage{times}
 %If you have times installed on your system, please
@@ -43,7 +44,7 @@
 
 \begin{abstract}
 	
-Adversarial attacks have been a growing concern as the success of Neural Networks increases. Of particular interest, are attacks that can devised without knowing the particular model used, but only the data distribution, the so called Black Box attacks. In this project we test several ideas to fend off Black Box attacks, Random Compression Matrices, and Capsule Networks with Reconstruction Error based detection.
+Adversarial attacks have been a growing concern as the success of Neural Networks increases. Of particular interest, are attacks that can devised without knowing the particular model used, but only the data distribution, the so called Black Box attacks. In this project we test several ideas to fend off Black Box attacks: Random Compression Matrices, the exponentiated gradient optimizer, and Capsule Networks with reconstruction error based detection.
 	
 \begin{keywords}
 Adversarial Examples, Black-Box Attacks, Random Projection Matrix, Reconstruction Error, Capsule Networks, Convolutional Neural Networks.
@@ -136,33 +137,41 @@ To analyze the weights obtained after compression and expansion, and compared th
 	\label{fig5} 
 \end{figure}
 
-\section*{GD vs ED}
+\section*{Exponentiated Gradient Optimization}
 
 \subsection*{Idea}
 
-Using the square loss results accommodates Gradient Descent methods as a good iterative optimization methods, resulting on an updating rule given by:
-$$ w_{t+1} \dot{=} w_t - \eta \nabla L(w_t). $$
-However using the relative entropy loss results in an iterative process called Exponential Gradient, with updating rule given by:
-$$ w_{t+1} \dot{=} w_t e^{-\eta \nabla L(w_t)}. $$
-In this way we propose using different iterative optimization updates or different losses that could be unknown to the attacker to defend against adversarial attacks generated with the most commonly used square loss.
+Using squared loss as a divergence we arrive at the familiar gradient descent update rule:
+$$ w_{t+1} \, \dot{=} \, w_t - \eta \nabla L(w_t). $$
+The choice of relative entropy as a divergence (Kivinen, J \& Warmuth, M 1997) results in the following update rule, known as Exponentiated Gradient (EG):
+$$ w_{t+1} \, \dot{=} \, w_t e^{-\eta \nabla L(w_t)}. $$
+When extended to the case where weights can be negative, the above optimization scheme is known as EG plus/minus.
+
+In this section, we investigate the robustness of models trained using each optimizer to adversarial attacks, and measure the transferability of attacks between said models.
 
 \subsection*{Method}
 
-Again we generate adversarial examples based on a fully connected neural network with 2 layers of size 100 and 10, using GD and EG± on MNIST. Then we generated   adversarial attacks using to methods; Gradient Ascent (GA) and Fast Gradient Sign (FGS). 
+In order to accurately compare the two optimizers, we train two initially identical networks to convergence using SGD and stochastic EG$\pm$. The architecture we chose for these experiments was a fully-connected neural network with a single hidden layer of 100 hidden nodes (FC 784-100-10).
+
+After training, we generate adversarial attacks againsts each network using iterative fast gradient sign (FGS), and simple gradient ascent (GA) on the input image, both optimizing with respect to the negative correct score.
+
+To compare robustness, we measure the number of iterations each method requires to fool each model. We then visualize the average perturbations needed to fool each network in order to gain insight into the network's internals, and compare transferability of equally strong attacks generated for each model.
+
+In order to do fast experimentation, we implemented the EG$\pm$ optimizer and each adversarial attack method in PyTorch.
 
 \begin{figure}
 	\centering
-	\caption{\enspace Adversarial Attacks examples for the SGD on the Center and EG on the right. On the left, we have the true input, and we show the added perturbation next to each adversarial attack.}
+	\caption{\enspace Adversarial attack samples generated using gradient ascent. From left to right, the columns are original image, noise to fool SGD-trained model, resulting adversarial example for SGD-trained model, noise to fool EG-trained model, resulting adversarial example generated for EG-trained model.}
 	\includegraphics[width=\linewidth]{mnist_attacks.png}
 	\label{fig6}
 \end{figure}
 
 \subsection*{Results}
 
-In table \ref{tab2} we can see that generating adversarial attacks is harder for for EG than SGD. Since as the number of iterations increases the magnitude of the perturbation increases, then not only is more computationally expansive, but is easier to observe the perturbation. Again, we can observe this phenomena in figure \ref{fig6}, where the perturbation is clearly bigger for the EG examples.
+In Table \ref{tab2}, we see that on average EG was $1.3\times$ more robust than SGD in terms of number of iterations taken to fool the models. To note is that it was significantly stronger against the fast gradient sign method, which distributes perturbations evenly across the image. This hints that the EG-trained model may have weak dependence on most of the pixels, relative to SGD which learns strong dependencies even on pixels which are rarely present.
 
 \begin{table}
-	\caption{\enspace Number of iterations that it takes to fool the two different optimizers SGD and EG.}
+	\caption{\enspace Number of iterations to fool each model: mean($\pm$std)}
 	\label{tab2}
 	\begin{tabular*}{\hsize}{@{\extracolsep{\fill}}ccc}
 		\hline
@@ -177,17 +186,19 @@ In table \ref{tab2} we can see that generating adversarial attacks is harder for
 	\end{tabular*}
 \end{table}
 
+Exploring this idea further, we visualized in Figure \ref{fig7} the average perturbation required to fool each model. We limit this visualization to the case of iterative gradient ascent to generate adversarial examples for input images labeled 3. The SGD-trained model is fooled largely by a collection of pixels on the periphery of the image, which are seldom if ever active in the training set. The EG$\pm$-trained model is undisturbed by these pixels, and requires a densely packed set of pixels concentrated in the difference between a three and an eight. It also effectively recovers the structure of the three, and is highly impacted by reductions to pixels in this structure. In contrast to SGD, the pixels which have a high impact on the score of the EG$\pm$-trained model make more semantic sense and are more likely to be activated in the training set.
+
 \begin{figure}
 	\centering
-	\caption{\enspace Average perturbation to fool a 3. SGD on the Left and EG on the Right.}
+	\caption{\enspace Average fooling perturbation for threes, SGD (left) and EG$\pm$ (right).}
 	\includegraphics[width=\linewidth]{avg_attack_3.png}
 	\label{fig7}
 \end{figure}
 
-Additionally in figure \ref{fig7} we can observe that on average 'fooling' an EG trained FC network requires bigger, but also more structured perturbations. As we can see in the image, it is easy to see that a 3 is captured by the EG perturbation.
+Because EG$\pm$ is undisturbed by the same collection of peripheral pixels which are highly effective at fooling SGD, we expect that the transferability of attacks from SGD to EG$\pm$ will be low. In contrast, the structures present to fool EG$\pm$ are still weakly present in the average perturbation to fool SGD, so we expect the transferability of attacks from EG$\pm$ to SGD to be high. To test these hypotheses, we generated attacks for each optimizer using a fixed number of iterations. We then measured the transferability of attack from one optimizer to another. The results of this experiment are reported in Table \ref{tab3}, and confirm our hypothesis.
 
 \begin{table}
-	\caption{\enspace Percentage of successful attacks with examples created from one optimizer to th other. Attacks generated with 200 iterations.}
+	\caption{\enspace Percentage of successfully transferred attacks from one optimizer to the other.}
 	\label{tab3}
 	\begin{tabular*}{\hsize}{@{\extracolsep{\fill}}ccc}
 		\hline
@@ -202,54 +213,58 @@ Additionally in figure \ref{fig7} we can observe that on average 'fooling' an EG
 	\end{tabular*}
 \end{table}
 
-Finally, in table \ref{tab3} we can see that attacks generated with the same number of iterations transfer better from EG to SGD than the other way around. Frustratingly, both sets of attacks transfer successfully to the other optimizer. 
+In conclusion, EG$\pm$ has been demonstrated as more robust than SGD against adversarial attacks. Based on Figure \ref{fig6}, the weights learned by EG$\pm$ have higher semantic significance, which leads the model to be harder to fool using peripheral pixels. Because of this, attacks against SGD have a significantly lower transferability to EG$\pm$ than the other way around. For future experiments, we suggest comparing EG$\pm$ to L1-regularized SGD, which we expect may have similar properties.
 
 \section*{Detection of Adversarial Examples using Reconstruction Error}
 
 \subsection*{Idea}
 
-In the paper introducing Capsule Networks [https://arxiv.org/abs/1710.09829], the capsule network is trained alongside a separate network that attempts to reconstruct the input image from the vector output. The L2 distance between the original image and reconstruction is then added to the loss function and used to train both networks.
+To decrease overfitting, Capsule Networks are commonly trained alongside a reconstruction, or decoder network which uses the vector output from the highest probability final capsule to attempt to reconstruct the input image. In other words, the decoder receives vector output only from the capsule of the predicted class. The architecture of a capsule network is shown in Figure \ref{fig9}, but all that is needed to understand this experiment is that it follows an encoder-decoder structure where the encoder is also responsible for classification.
 
-When the network is fooled by an adversarial example, the reconstruction produced by the final vector is extremely far from the input image. As a result, it should be possible to use high reconstruction loss as a linear classifier to discern between real inputs and adversarial examples.
+These output vectors have far less dimensionality than the input, and as a result the decoder network is limited to reconstructing images that lie on a low-dimensional manifold fit to the winning class only. Each digit class of MNIST lies near a low-dimensional manifold, so can typically be reconstructed with low loss. On the other hand, adversarial examples are close to the manifold of their original class, but the decoder will be forced to try to reconstruct them using the manifold for a different digit. As a result, we expect high reconstruction error. In the following section, we use the mean-squared error between the reconstructed image and input to detect adversarial examples, and report our results in the form of an ROC curve.
 
-\subsection*{Method}
-
-We created a Capsule Network to perform reconstruction. The structure of the network can be observed in figure \ref{fig7}. Using the output reconstruction we compute the Mean Square Error between the original input and the reconstruction. Our hope is that adversarial attacks will have reconstructions that will be more different than the non adversarial ones.
+Because we generate attacks using gradients from the classification network, but do not use information from the decoder network, these attacks are generated in a scenario that is white-box with respect to the classification/encoder network, and black-box with respect to the decoder.
 
 \begin{figure}[h!]
 	\centering
 	\caption{\enspace Capsule Network Architecture}
 	\includegraphics[width=\linewidth]{caps_recon}
-	\label{fig3}
-\end{figure}
-
-In figure \ref{fig8} we can observe such examples. As we can see the reconstruction for non adversarial attacks seems closer than the adversarial reconstruction. In fact the adversarial reconstruction is a different number. The adversarial reconstruction is not always the same, as we can see in figure \ref{fig9}, the reconstruction for adversarial ones gets reconstructed as 2 or 7 in this particular examples.
-
-\begin{figure}[h!]
-	\centering
-	\caption{\enspace Reconstruction Examples. Non adversarial on the Left and adversarial on the right.}
-	\includegraphics[width=\linewidth]{recon-fig5}
-	\label{fig8}
-\end{figure}
-
-\begin{figure}[h!]
-	\centering
-	\caption{\enspace Reconstruction Examples. Non adversarial on the Left and adversarial on the right.}
-	\subfloat[Reconstructed to 2]{\includegraphics[width=\linewidth]{recon-fig4}} \\
-	\subfloat[Reconstructed to 7]{\includegraphics[width=\linewidth]{recon-fig3}}
 	\label{fig9}
+\end{figure}
+
+\subsection*{Method}
+
+After implementing the necessary models and utilities, this experiment was straightforward. First, we trained a capsule network for ten epochs on MNIST, achieving a test accuracy of 99.3\%. Further training was time-consuming and inconsequential for the purposes of adversarial attacks. We then ran the iterative gradient ascent method, as described in the previous section, to generate untargeted adversarial attacks for a subset of 1024 images. Lastly, we measure the mean-squared error for the reconstructions of each of these images and report the ROC curve of a linear threshold on this error to classify whether an input is adversarial.
+
+As part of this experiment, we implemented a capsule network and utilities to measure reconstruction error in PyTorch. This code for this section and the previous can be found at \url{https://github.com/KellerJordan/CapsNet-Adversarial}.
+
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Reconstruction of original and adversarial inputs. Columns from left: original image, reconstruction of original image, adversarial image, reconstruction of adversarial image}
+	\includegraphics[width=\linewidth]{recon-fig5}
+	\label{fig10}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace More examples. Columns as in Figure \ref{fig10}.}
+	\subfloat[Network fooled to predict label 2]{\includegraphics[width=\linewidth]{recon-fig4}} \\
+	\subfloat[Network fooled to predict label 7]{\includegraphics[width=\linewidth]{recon-fig3}}
+	\label{fig11}
 \end{figure}
 
 \subsection*{Results}
 
-In figure \ref{fig10} we can observe the ROC for attack detection. Surprisingly, we can detect around 75\% of the attacks while incurring in a 5\% false positive rate, which is a promising result that could get better with finer tune-up.
+In Figures \ref{fig10} and \ref{fig11} we observe that the network can effectively reconstruct natural inputs using the manifold corresponding to the unperturbed prediction, but fails to do so using the manifold for the class it was adversarially fooled into predicting. After recording the mean-squared error for a batch of 1024 adversarial and natural inputs, we report in Figure \ref{fig12} the ROC curve for a linear threshold classifying the inputs as adversarial or natural.
 
 \begin{figure}[h!]
 	\centering
 	\caption{\enspace Receiving Operating Characteristic Curve for attack detection using different thresholds of MSE.}
 	\includegraphics[width=\linewidth]{mse_roc}
-	\label{fig10}
+	\label{fig12}
 \end{figure}
+
+At a false-positive rate of 5\%, this method can successfully detect nearly 70\% of adversarial examples. These results could be further improved by increasing the expressiveness of the decoder network and using a more effective loss function. As encoder-decoder architectures such as capsule networks become more widely adopted and usable in complex datasets, we believe that this technique will be an effective defense against adversarial attacks.
 
 %\bibliographystyle{apalike}
 %\bibliography{references.bib}
