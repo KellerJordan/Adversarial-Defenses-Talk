@@ -324,8 +324,8 @@ UCSC
 			\item Train FC 784-100-10 using GD and EG$\pm$ on MNIST
 			\item Run untargeted adversarial attack methods
 			\begin{itemize}
-				\item Gradient Ascent (GA)
-				\item Fast Gradient Sign (FGS)
+				\item Gradient Ascent
+				\item Iterative Fast Gradient Sign
 			\end{itemize}
 			\item Compare resulting models and adversarial examples
 			\begin{itemize}
@@ -347,7 +347,7 @@ UCSC
 				\begin{tabular}{ l | l | l }
 					Method / Optimizer & SGD & EG \\ \hline
 					Gradient Ascent & $60.9 (\pm 32.3)$ & $85.1 (\pm 40.5)$ \\ \hline
-					Fast Gradient Sign & $52.0 (\pm 26.1)$ & $91.0 (\pm 43.5)$
+					Iterative Fast Gradient Sign & $52.0 (\pm 26.1)$ & $91.0 (\pm 43.5)$
 				\end{tabular}
 			\end{center}
 		\end{block}
@@ -369,7 +369,7 @@ UCSC
 				\begin{tabular}{ l | l | l }
 					Method / Src$\rightarrow$Dst & SGD$\rightarrow$EG & EG$\rightarrow$SGD  \\ \hline
 					Gradient Ascent & 67.4\% & 99.0\% \\ \hline
-					Fast Gradient Sign & 88.2\% & 99.8\%
+					Iterative Fast Gradient Sign & 88.2\% & 99.8\%
 				\end{tabular}
 			\end{center}
 		\end{block}

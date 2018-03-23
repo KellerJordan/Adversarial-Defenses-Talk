@@ -24,13 +24,13 @@
 \newcommand{\Sh}{\hat{\Sigma}}
 
 % Figures Path
-\graphicspath{{./fig/}}
+\graphicspath{{./figures/}}
 
 \title{Defending Against Adversarial Attacks}
 
 %input all authors' names
 
-\author{Brett Gohre, Rene Gutierrez \& Keller Jordan \\ }
+\author{Keller Jordan, Rene Gutierrez \& Brett G\"{o}hre \\}
 
 %input affiliations
 
@@ -43,10 +43,10 @@
 
 \begin{abstract}
 	
-Adversarial attacks have been a growing concern as the success of Neural Networks increases. Of particular interest, are attacks that can devised without knowing the particular model used, but only the data distribution, the so called Black Box attacks. In this project we test several ideas to fend off Black Box attacks, Random Compression Matrices, Multi-task Training, Detection using Reconstruction Error and Capsule Networks.
+Adversarial attacks have been a growing concern as the success of Neural Networks increases. Of particular interest, are attacks that can devised without knowing the particular model used, but only the data distribution, the so called Black Box attacks. In this project we test several ideas to fend off Black Box attacks, Random Compression Matrices, and Capsule Networks with Reconstruction Error based detection.
 	
 \begin{keywords}
-Adversarial Examples, Black-Box Attacks, Random Projection Matrix, Multi-Task Training, Reconstruction Error, Capsule Networks, Convolutional Neural Networks.
+Adversarial Examples, Black-Box Attacks, Random Projection Matrix, Reconstruction Error, Capsule Networks, Convolutional Neural Networks.
 \end{keywords}
 \end{abstract}
 
@@ -63,13 +63,13 @@ Random compression matrices have been found to be able to perform dimensionality
 
 \subsection*{Method}
 
-For this idea we worked with the MNIST dataset. First created 2 sets of adversarial examples based on different architectures. The first set was based on Logistic Regression and consists of 758 adversarial images. The second one was based on a Convolutional Neural Network optimized to 95\% accuracy in the validation set, and had 440 adversarial images. Then we tried to attack these architectures plus a Random Compression Matrix architecture, a Random Expansion Matrix and 2 CNN optimized to 90\% and 99\% accuracy.
+For this idea we worked with the MNIST dataset. First, we created 2 sets of adversarial examples based on different architectures. The first set was based on Logistic Regression and consists of 758 adversarial images. The second one was based on a Convolutional Neural Network optimized to 95\% accuracy in the validation set, and had 440 adversarial images. Then we tried to attack these architectures plus a Random Compression Matrix architecture, a Random Expansion Matrix and 2 CNN optimized to 90\% and 99\% accuracy.
 
 The Random Projection architectures where basically a Logistic Regression for which a Random Projection Matrix $ \Phi $ is applied to the input $ x $, but remains fixed through training. The idea was that since adversarial attacks are based on small perturbations $ \epsilon $ to the input, then when applying the random matrix the perturbation would be rendered meaningless, that is $ \Phi \epsilon $ would not be able to attack as effectively. Furthermore, since the attacker would not know $ \Phi $, it would not be able to train attacks specific to it. In this way our random projection matrix can be thought as some kind of code.
 
 \begin{figure}[h!]
 	\centering
-	\caption{\enspace Examples of the Adversarial Attacks created under the 2 Architechtures. The top row shows the attacks created with the Logistic Regression, while the bottom was created using a CNN.}
+	\caption{\enspace Examples of the Adversarial Attacks created under the 2 Architectures. The top row shows the attacks created with the Logistic Regression, while the bottom was created using a CNN.}
 	\subfloat[Adversarial Attack for 3]{\includegraphics[width=0.45\linewidth]{advImg.png}} 
 	\subfloat[Noise  ]{\includegraphics[width=0.45\linewidth]{advNoi.png}}   \\
 	\subfloat[Adversarial Attack for 3]{\includegraphics[width=0.45\linewidth]{advImgCnn.png}} 
@@ -103,7 +103,7 @@ The Random Projection architectures where basically a Logistic Regression for wh
 
 \begin{figure}[h!]
 	\centering
-	\caption{\enspace Confusion Matrices for the True Target and Predicted Target on the Left and the Adversarial Target and Predicted Target on the Right. The top row shows the results using the a compression matrix, while the bottom row shows the results on an expansion matrix. Both results are for the adversarial examples generated with the Logistic Regression architecturee.}
+	\caption{\enspace Confusion Matrices for the True Target and Predicted Target on the Left and the Adversarial Target and Predicted Target on the Right. The top row shows the results using the a compression matrix, while the bottom row shows the results on an expansion matrix. Both results are for the adversarial examples generated with the Logistic Regression architecture.}
 	\subfloat[Confusion Matrix for True Class]{\includegraphics[width=0.5\linewidth]{confussionMatrixAdvTrueCom.png}} 
 	\subfloat[Confusion Matrix for Target Class]{\includegraphics[width=0.5\linewidth]{confussionMatrixAdvTarCom.png}}   \\
 	\subfloat[Confusion Matrix for True Class]{\includegraphics[width=0.5\linewidth]{confussionMatrixAdvTrueExp.png}} 
@@ -113,15 +113,96 @@ The Random Projection architectures where basically a Logistic Regression for wh
 
 In figure \ref{fig2} we can see the corresponding confusion matrices for the true class on the left and for the adversarial class on the right for the examples generated from the Logistic regression architecture. As we can see the adversarial attacks not only make the expansion and compression defenses fail to predict correctly, but are completely fooled by the examples.
 
-Furthermore, in table \ref{tab1} we can see that the adversarial examples generated by different architectures transfer successfully across architectures. Even fooling completely the randomness induced by the projecting matrices. However it seems that training the CNN to until it achieves higher accuracy provides the best protection, however it still performs poorly and offers little protection for examples generated on the CNN.   
+Furthermore, in table \ref{tab1} we can see that the adversarial examples generated by different architectures transfer successfully across architectures. Even fooling completely the randomness induced by the projecting matrices. However it seems that training the CNN to until it achieves higher accuracy provides the best protection, however it still performs poorly and offers little protection for examples generated on the CNN.
 
-\section*{Multi-task Training with Wingman Distribution}
+To analyze the weights obtained after compression and expansion, and compared them to the weights obtained under regular logistic regression, we apply the pseudo inverse of the projection matrix $ \Phi^+ $. In figure \ref{fig4} we can see the weights re-expanded or re-compressed to the original size. The weights for the Expansion weights are very close to the regular weights, so it comes as no surprise that the Expansion Logistic Regression fails to defend against adversarial attacks. However, even though the weights from the Compressed Logistic are significantly different this did not prevent it from getting fooled. Also, the weights seem to converge to the regular weights as the level of compression decreases, as we can see in figure \ref{fig5}, giving us a hint of why the network still gets fooled.
 
-White box attacks on a separate classifier trained on (approximately) the same data distributions as a black box classifier target. This suggests the data distribution itself contains some weaknesses that can be independently fleshed out with a variety of different types of classifiers. We seek to explore the outcome of training on an additional new classification task with unrelated data. We will train our model to correctly classify the relevant data samples, while simultaneously training the model to correctly classify the irrelevant data samples.
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Weights for "Neuron 2", for the Compression, Expansion and Regular Logistic Regression.}
+	\subfloat[Compression]{\includegraphics[width=0.33\linewidth]{com2.png}}
+	\subfloat[Expansion]{\includegraphics[width=0.33\linewidth]{exp2.png}}
+	\subfloat[Regular]{\includegraphics[width=0.33\linewidth]{reg2.png}}
+	\label{fig4} 
+\end{figure}
 
-The intuition behind our motivation is that the weight updates may take on a vastly different trajectory than the weight update trajectory of the vanilla case. Bregmann divergences leads to different update rules and they may lead to varying degrees of robustness– if only to attacks based on different divergences. We are curious to find out if multi-task training with the wingman distribution achieve a similar outcomes of defending against attacks.
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Weights for 2, for the Compression t0 196, Compression to 392, Compression to 588 and Regular Logistic Regression.}
+	\subfloat[196]{\includegraphics[width=0.25\linewidth]{com2.png}}
+	\subfloat[392]{\includegraphics[width=0.25\linewidth]{co22.png}}
+	\subfloat[588]{\includegraphics[width=0.25\linewidth]{co32.png}}
+	\subfloat[Reg]{\includegraphics[width=0.25\linewidth]{reg2.png}}  
+	\label{fig5} 
+\end{figure}
 
-The assumption is that the attacker does not know what our secret additional domain and task we are training for, and therefore has a worse estimate of the steepest direction toward classifying the input as differently.
+\section*{GD vs ED}
+
+\subsection*{Idea}
+
+Using the square loss results accommodates Gradient Descent methods as a good iterative optimization methods, resulting on an updating rule given by:
+$$ w_{t+1} \dot{=} w_t - \eta \nabla L(w_t). $$
+However using the relative entropy loss results in an iterative process called Exponential Gradient, with updating rule given by:
+$$ w_{t+1} \dot{=} w_t e^{-\eta \nabla L(w_t)}. $$
+In this way we propose using different iterative optimization updates or different losses that could be unknown to the attacker to defend against adversarial attacks generated with the most commonly used square loss.
+
+\subsection*{Method}
+
+Again we generate adversarial examples based on a fully connected neural network with 2 layers of size 100 and 10, using GD and EG± on MNIST. Then we generated   adversarial attacks using to methods; Gradient Ascent (GA) and Fast Gradient Sign (FGS). 
+
+\begin{figure}
+	\centering
+	\caption{\enspace Adversarial Attacks examples for the SGD on the Center and EG on the right. On the left, we have the true input, and we show the added perturbation next to each adversarial attack.}
+	\includegraphics[width=\linewidth]{mnist_attacks.png}
+	\label{fig6}
+\end{figure}
+
+\subsection*{Results}
+
+In table \ref{tab2} we can see that generating adversarial attacks is harder for for EG than SGD. Since as the number of iterations increases the magnitude of the perturbation increases, then not only is more computationally expansive, but is easier to observe the perturbation. Again, we can observe this phenomena in figure \ref{fig6}, where the perturbation is clearly bigger for the EG examples.
+
+\begin{table}
+	\caption{\enspace Number of iterations that it takes to fool the two different optimizers SGD and EG.}
+	\label{tab2}
+	\begin{tabular*}{\hsize}{@{\extracolsep{\fill}}ccc}
+		\hline
+		\\[-7pt]
+		\multicolumn{1}{c}{\it Method/Optimizer} & 
+		\multicolumn{1}{c}{\it SGD}              & 
+		\multicolumn{1}{c}{\it EG}               \\ 
+		\hline
+		\\[-5pt] 
+		Gradient Ascent    & $60.9 (\pm 32.3)$ & $85.1 (\pm 40.5)$ \\ 
+		Fast Gradient Sign & $52.0 (\pm 26.1)$ & $91.0 (\pm 43.5)$
+	\end{tabular*}
+\end{table}
+
+\begin{figure}
+	\centering
+	\caption{\enspace Average perturbation to fool a 3. SGD on the Left and EG on the Right.}
+	\includegraphics[width=\linewidth]{avg_attack_3.png}
+	\label{fig7}
+\end{figure}
+
+Additionally in figure \ref{fig7} we can observe that on average 'fooling' an EG trained FC network requires bigger, but also more structured perturbations. As we can see in the image, it is easy to see that a 3 is captured by the EG perturbation.
+
+\begin{table}
+	\caption{\enspace Percentage of successful attacks with examples created from one optimizer to th other. Attacks generated with 200 iterations.}
+	\label{tab3}
+	\begin{tabular*}{\hsize}{@{\extracolsep{\fill}}ccc}
+		\hline
+		\\[-7pt]
+		\multicolumn{1}{c}{\it Method/ Src$\to$Dst} & 
+		\multicolumn{1}{c}{\it SGD$\to$EG}          & 
+		\multicolumn{1}{c}{\it EG$\to$SGD}          \\ 
+		\hline
+		\\[-5pt] 
+		Gradient Ascent     & 67.4\% & 99.0\% \\
+		Fast Gradient Sign  & 88.2\% & 99.8\%
+	\end{tabular*}
+\end{table}
+
+Finally, in table \ref{tab3} we can see that attacks generated with the same number of iterations transfer better from EG to SGD than the other way around. Frustratingly, both sets of attacks transfer successfully to the other optimizer. 
 
 \section*{Detection of Adversarial Examples using Reconstruction Error}
 
@@ -133,38 +214,53 @@ When the network is fooled by an adversarial example, the reconstruction produce
 
 \subsection*{Method}
 
-We generated another set of adversarial examples using gradient descent. This time we generated 50,000 for MNIST, we show one of such examples in figure \ref{fig3}. We compute the ROC using the Mean Square Error as a threshold using 50,000 real and 50,000 adversarial examples.
+We created a Capsule Network to perform reconstruction. The structure of the network can be observed in figure \ref{fig7}. Using the output reconstruction we compute the Mean Square Error between the original input and the reconstruction. Our hope is that adversarial attacks will have reconstructions that will be more different than the non adversarial ones.
 
 \begin{figure}[h!]
 	\centering
-	\caption{\enspace EAdversarial Example and Reconstruction. The leftmost image represents the real image, next to it it's corresponding reconstruction. Then we show the adversarial example and finally the corresponding reconstruction on the right.}
-	\subfloat[Adversarial and Real Reconstruction]{\includegraphics[width=\linewidth]{recon-fig2.png}}
+	\caption{\enspace Capsule Network Architecture}
+	\includegraphics[width=\linewidth]{caps_recon}
 	\label{fig3}
+\end{figure}
+
+In figure \ref{fig8} we can observe such examples. As we can see the reconstruction for non adversarial attacks seems closer than the adversarial reconstruction. In fact the adversarial reconstruction is a different number. The adversarial reconstruction is not always the same, as we can see in figure \ref{fig9}, the reconstruction for adversarial ones gets reconstructed as 2 or 7 in this particular examples.
+
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Reconstruction Examples. Non adversarial on the Left and adversarial on the right.}
+	\includegraphics[width=\linewidth]{recon-fig5}
+	\label{fig8}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Reconstruction Examples. Non adversarial on the Left and adversarial on the right.}
+	\subfloat[Reconstructed to 2]{\includegraphics[width=\linewidth]{recon-fig4}} \\
+	\subfloat[Reconstructed to 7]{\includegraphics[width=\linewidth]{recon-fig3}}
+	\label{fig9}
 \end{figure}
 
 \subsection*{Results}
 
-As you can see in table the reconstruction error can be used not only to warn against adversarial attacks, but use it also as a linear predictor for adversarial attacks. Finding that setting the threshold for mean square loss at 93 provides a satisfactory defense.
+In figure \ref{fig10} we can observe the ROC for attack detection. Surprisingly, we can detect around 75\% of the attacks while incurring in a 5\% false positive rate, which is a promising result that could get better with finer tune-up.
 
-\section*{GD vs ED}
+\begin{figure}[h!]
+	\centering
+	\caption{\enspace Receiving Operating Characteristic Curve for attack detection using different thresholds of MSE.}
+	\includegraphics[width=\linewidth]{mse_roc}
+	\label{fig10}
+\end{figure}
 
-\subsection*{Idea}
+%\bibliographystyle{apalike}
+%\bibliography{references.bib}
 
-Using the square loss results in iterative optimization process as gradient descent, however using the relative entropy loss results in an iterative Exponential gradient update iterative process. In this way we propose using different iterative optimization updates to defend against adversarial attacks generated with the most commonly used gradient descent.
+\section*{Bibliography}
 
-\subsection*{Method}
+Sara Sabour, Nicholas Frosst, and Geoffrey E Hinton. \textit{Dynamic routing between capsules}. In
+Advances in Neural Information Processing Systems, pp. 3859–3869, 2017.
 
-Again we generate adversarial examples comming from both updating mechanism. 
-
-\subsection*{Results}
-
-As we can see in figure .. using EG instead of GD provides robustness to adversarial attacks.
-
-
-
-
-\bibliographystyle{apalike}
-\bibliography{references.bib}
+Kivinen, J \& Warmuth, M (1997). \textit{Additive versus exponentiated gradient updates for linear
+prediction}. Journal of Tnformation and Computation 132, 1-64. 
 
 
 \end{document}
